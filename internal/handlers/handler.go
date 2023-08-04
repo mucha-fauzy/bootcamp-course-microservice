@@ -21,8 +21,6 @@ func ProvideHandler(service services.Service) *Handler {
 func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	// Define the required struct for the request body
 	var req struct {
-		ID      string `json:"id"` // next generate uuid
-		UserID  string `json:"user_id"`
 		Title   string `json:"title"`
 		Content string `json:"content"`
 	}
@@ -34,8 +32,8 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
-	if req.ID == "" || req.UserID == "" || req.Title == "" || req.Content == "" {
-		http.Error(w, "id, user_id, title, and content fields are required", http.StatusBadRequest)
+	if req.Title == "" || req.Content == "" {
+		http.Error(w, "title and content fields are required", http.StatusBadRequest)
 		return
 	}
 
@@ -43,31 +41,30 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 
 	// Create the product model from the request data
 	course := &models.Course{
-		ID:      req.ID,
-		UserID:  req.UserID,
+		UserID:  r.Context().Value("user_id").(string),
 		Title:   req.Title,
 		Content: req.Content,
 	}
 
 	err := h.Service.CreateCourse(course)
 	if err != nil {
-		http.Error(w, "Failed to register user", http.StatusInternalServerError)
+		http.Error(w, "Failed to create course", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	response := map[string]interface{}{
-		"message": "Course successfully registered",
+		"message": "Course successfully created",
 	}
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *Handler) ReadCourseByUserID(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the user ID from the context
-	userID := r.Context().Value("userid").(string)
+	UserID := r.Context().Value("user_id").(string)
 
-	course, err := h.Service.ReadCourseByUserID(userID)
+	course, err := h.Service.ReadCourseByUserID(UserID)
 	if err != nil {
 		http.Error(w, "Failed to fetch course", http.StatusInternalServerError)
 		return
