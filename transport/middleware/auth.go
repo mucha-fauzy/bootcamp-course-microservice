@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Authentication struct {
@@ -61,6 +63,51 @@ func (a *Authentication) VerifyJWT(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 
+		// Parse and validate the JWT token
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// Check the signing method
+			if token.Method.Alg() != jwt.SigningMethodHS256.Name {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return a.Secret, nil
+		})
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Check if the token is valid
+		if _, ok := token.Claims.(jwt.MapClaims); !ok || !token.Valid {
+			http.Error(w, "Token invalid", http.StatusUnauthorized)
+			return
+		}
+
+		// Extract user information from token claims
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "No user information from JWT", http.StatusUnauthorized)
+			return
+		}
+
+		userID, ok := claims["user_id"].(string)
+		if !ok {
+			http.Error(w, "JWT user_id is not found", http.StatusUnauthorized)
+			return
+		}
+
+		username, ok := claims["username"].(string)
+		if !ok {
+			http.Error(w, "JWT usernam is not found", http.StatusUnauthorized)
+			return
+		}
+
+		role, ok := claims["role"].(string)
+		if !ok {
+			http.Error(w, "JWT role is not found", http.StatusUnauthorized)
+			return
+		}
+
+		// Check if the user's role is "teacher"
 		isTeacher, err := IsTeacherRole(tokenString)
 		if err != nil {
 			http.Error(w, "Error validating role", http.StatusInternalServerError)
@@ -72,9 +119,14 @@ func (a *Authentication) VerifyJWT(next http.Handler) http.Handler {
 			return
 		}
 
-		// User is authorized, add the token to the request context for use in protected endpoints
-		ctx := context.WithValue(r.Context(), "user", tokenString)
+		// Add user information to the request context
+		ctx := context.WithValue(r.Context(), "user_id", userID)
+		ctx = context.WithValue(ctx, "username", username)
+		ctx = context.WithValue(ctx, "role", role)
+		ctx = context.WithValue(ctx, "token", tokenString)
 		r = r.WithContext(ctx)
+
+		// Call the next handler in the chain
 		next.ServeHTTP(w, r)
 	})
 }
