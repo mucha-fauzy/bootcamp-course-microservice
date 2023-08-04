@@ -21,13 +21,15 @@ The **Bootcamp Courses Microservice** handles the management of courses within t
   cd bootcamp-course-microservice
    ```
 
+
 3. Install the dependencies:
 
    ```bash
    go mod download
    ```
-   
+
 4. Create Required table (./migrations) and seed(./seeders) the table if necessary
+
 
 5. Build the project:
 
