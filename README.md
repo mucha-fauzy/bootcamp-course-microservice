@@ -18,9 +18,8 @@ The **Bootcamp Courses Microservice** handles the management of courses within t
 2. Navigate to the project directory:
 
    ```bash
-  cd bootcamp-course-microservice
+   cd bootcamp-course-microservice
    ```
-
 
 3. Install the dependencies:
 
