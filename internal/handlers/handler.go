@@ -3,12 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"bootcamp_course_microservice/internal/models"
 	"bootcamp_course_microservice/internal/services"
-
-	"github.com/go-chi/chi"
 )
 
 type Handler struct {
@@ -24,8 +21,8 @@ func ProvideHandler(service services.Service) *Handler {
 func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	// Define the required struct for the request body
 	var req struct {
-		ID      int    `json:"id"`
-		UserID  int    `json:"user_id"`
+		ID      string `json:"id"` // next generate uuid
+		UserID  string `json:"user_id"`
 		Title   string `json:"title"`
 		Content string `json:"content"`
 	}
@@ -36,11 +33,8 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ID := strconv.Itoa(req.ID)
-	UserID := strconv.Itoa(req.UserID)
-
 	// Validate required fields
-	if ID == "" || UserID == "" || req.Title == "" || req.Content == "" {
+	if req.ID == "" || req.UserID == "" || req.Title == "" || req.Content == "" {
 		http.Error(w, "id, user_id, title, and content fields are required", http.StatusBadRequest)
 		return
 	}
@@ -49,8 +43,8 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 
 	// Create the product model from the request data
 	course := &models.Course{
-		ID:      ID,
-		UserID:  UserID,
+		ID:      req.ID,
+		UserID:  req.UserID,
 		Title:   req.Title,
 		Content: req.Content,
 	}
@@ -70,9 +64,10 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ReadCourseByUserID(w http.ResponseWriter, r *http.Request) {
-	UserID := chi.URLParam(r, "userid")
+	// Retrieve the user ID from the context
+	userID := r.Context().Value("userid").(string)
 
-	course, err := h.Service.ReadCourseByUserID(UserID)
+	course, err := h.Service.ReadCourseByUserID(userID)
 	if err != nil {
 		http.Error(w, "Failed to fetch course", http.StatusInternalServerError)
 		return
