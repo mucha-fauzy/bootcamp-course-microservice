@@ -4,7 +4,6 @@ import (
 	"bootcamp_course_microservice/infras"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -35,7 +34,6 @@ func (a *Authentication) VerifyTeacherJWT(next http.Handler) http.Handler {
 			return
 		}
 
-		// Set the JWT token in the Authorization header
 		req.Header.Set("Authorization", "Bearer "+tokenString)
 
 		client := &http.Client{}
@@ -57,14 +55,12 @@ func (a *Authentication) VerifyTeacherJWT(next http.Handler) http.Handler {
 			}
 
 			role, ok := responseData["role"]
-			fmt.Println(role)
-			// fmt.Println("in here2")
+
 			if !ok {
 				http.Error(w, "Failed to get user role", http.StatusInternalServerError)
 				return
 			}
 
-			// Check if the user's role is "teacher"
 			if role != "teacher" {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -76,11 +72,10 @@ func (a *Authentication) VerifyTeacherJWT(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		} else if resp.StatusCode == http.StatusUnauthorized {
 			// Token is invalid or expired
-			fmt.Println("in here2")
+
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		} else {
-			// Other error occurred
-			fmt.Println("in here3")
+
 			http.Error(w, "Error", http.StatusInternalServerError)
 		}
 	})
