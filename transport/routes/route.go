@@ -32,8 +32,8 @@ func (r *Router) SetupRoutes() http.Handler {
 	mux.Route("/v1", func(rc chi.Router) {
 		// Protected endpoints accessible only by teachers
 		rc.Group(func(rc chi.Router) {
-			rc.Use(r.Authentication.VerifyTeacherJWT)
-			rc.Get("/courses/{userid}", r.Handler.ReadCourseByUserID)
+			rc.Use(r.Authentication.VerifyJWT)
+			rc.Get("/courses", r.Handler.ReadCourseByUserID)
 			rc.Post("/courses", r.Handler.CreateCourse)
 		})
 	})
