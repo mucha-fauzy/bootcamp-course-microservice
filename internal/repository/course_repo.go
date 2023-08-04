@@ -4,6 +4,7 @@ import (
 	"bootcamp_course_microservice/internal/models"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,9 +28,10 @@ func (r *RepositoryImpl) ReadCourseByUserID(userID string) ([]models.Course, err
 func (r *RepositoryImpl) CreateCourse(course *models.Course) error {
 	query :=
 		`
-	INSERT INTO bootcamp_course (id, user_id, title, content, created_at, updated_at) 
-	VALUES (?, ?, ?, ?, ?, ?, ?)
+	INSERT INTO bootcamp_courses (id, user_id, title, content, created_at, updated_at) 
+	VALUES (?, ?, ?, ?, ?, ?)
 	`
+	course.ID = uuid.New().String()
 	course.CreatedAt = time.Now()
 	course.UpdatedAt = time.Now()
 	_, err := r.DB.Write.Exec(
